@@ -1,4 +1,4 @@
-import User from '../models/user.model.js';
+import User from '../model/userModel.js';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 dotenv.config();

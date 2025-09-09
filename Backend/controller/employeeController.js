@@ -1,28 +1,40 @@
-import Employee from '../models/employee.model.js';
+import Employee from '../model/employeeModel.js';
 
 // CREATE Employee
-const createEmployee = async (req, res) => {
-  const { name, email, position, salary } = req.body;
+export const createEmployee = async (req, res) => {
+  const { company, email, phone, position, numberOfLeads, status } = req.body;
+  console.log(req.body);
+
   try {
+    // Check if employee with same email exists
     const existingEmployee = await Employee.findOne({ email });
     if (existingEmployee) {
       return res.status(400).json({ error: 'Email already in use' });
     }
 
-    const newEmployee = new Employee({ name, email, position, salary });
+    const newEmployee = new Employee({
+      company,
+      email,
+      phone,
+      position,
+      numberOfLeads,
+      status,
+    });
+
     await newEmployee.save();
+
     res.status(201).json({
       message: 'Employee created successfully',
       employee: newEmployee,
     });
   } catch (error) {
-    console.error('Create Employee Error:', error.message);
+    console.error('Create Employee Error:', error);
     res.status(500).json({ error: 'Server error while creating employee' });
   }
 };
 
 // GET ALL Employees
-const getEmployees = async (req, res) => {
+export const getEmployees = async (req, res) => {
   try {
     const employees = await Employee.find();
     res.status(200).json(employees);
@@ -33,7 +45,7 @@ const getEmployees = async (req, res) => {
 };
 
 // UPDATE Employee
-const updateEmployee = async (req, res) => {
+export const updateEmployee = async (req, res) => {
   try {
     const updatedEmployee = await Employee.findByIdAndUpdate(
       req.params.id,
@@ -54,7 +66,7 @@ const updateEmployee = async (req, res) => {
 };
 
 // DELETE Employee
-const deleteEmployee = async (req, res) => {
+export const deleteEmployee = async (req, res) => {
   try {
     const deletedEmployee = await Employee.findByIdAndDelete(req.params.id);
     if (!deletedEmployee) {
@@ -65,11 +77,4 @@ const deleteEmployee = async (req, res) => {
     console.error('Delete Employee Error:', error.message);
     res.status(500).json({ error: 'Server error while deleting employee' });
   }
-};
-
-exports = {
-  createEmployee,
-  getEmployees,
-  updateEmployee,
-  deleteEmployee,
 };

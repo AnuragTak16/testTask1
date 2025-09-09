@@ -1,14 +1,28 @@
 import express from 'express';
-import DatabaseConnection from './Database/db.js';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import DatabaseConnection from './database/db.js';
+import userRoutes from './routes/userroute.js';
 
+dotenv.config();
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Database connection
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+// Connect to DB
 DatabaseConnection();
 
 app.use(express.json());
 
+// Routes
+app.use('/api', userRoutes);
+
 app.listen(PORT, () => {
-  console.log(` Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
