@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Edit, Trash2 } from 'lucide-react';
 import { AddEmployeeModal } from './add-employee';
 import { EditEmployeeModal } from './edit-employee';
@@ -17,34 +18,11 @@ interface Employee {
   status: string;
 }
 
-const employeeData: Employee[] = [
-  {
-    id: 1,
-    serNo: 1,
-    company: 'John LCC',
-    email: 'abc123@gmail.com',
-    phone: '+15177320919',
-    position: '0',
-    numberOfLeads: 50,
-    status: 'Active',
-  },
-  // Repeat for demonstration
-  ...Array(8)
-    .fill(null)
-    .map((_, i) => ({
-      id: i + 2,
-      serNo: 1,
-      company: 'John LCC',
-      email: 'abc123@gmail.com',
-      phone: '+15177320919',
-      position: '0',
-      numberOfLeads: 50,
-      status: 'Active',
-    })),
-];
-
 export function EmployeeContent() {
-  const [employees, setEmployees] = useState<Employee[]>(employeeData);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -52,11 +30,46 @@ export function EmployeeContent() {
     null
   );
 
-  const handleAddEmployee = (employeeData: Omit<Employee, 'id'>) => {
+  // Fetch employees from API
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          'http://localhost:3000/api/allemployees',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setEmployees(response.data);
+      } catch (err: any) {
+        console.error(
+          'Fetch employees error:',
+          err.response?.data || err.message
+        );
+        setError(err.response?.data?.message || 'Something went wrong');
+        setEmployees([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  const handleAddEmployee = (employeeData: Omit<Employee, 'id' | 'serNo'>) => {
     const newEmployee = {
       ...employeeData,
-      id: Math.max(...employees.map((e) => e.id)) + 1,
+      id:
+        employees.length > 0 ? Math.max(...employees.map((e) => e.id)) + 1 : 1,
+      serNo: employees.length + 1,
     };
+
     setEmployees([...employees, newEmployee]);
     setShowAddModal(false);
   };
@@ -92,6 +105,14 @@ export function EmployeeContent() {
     setSelectedEmployee(employee);
     setShowDeleteModal(true);
   };
+
+  if (loading) {
+    return <p className='p-6 text-gray-500'>Loading employees...</p>;
+  }
+
+  if (error) {
+    return <p className='p-6 text-red-500'>{error}</p>;
+  }
 
   return (
     <div className='h-full flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm'>

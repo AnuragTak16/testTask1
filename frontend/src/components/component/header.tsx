@@ -1,10 +1,13 @@
 import { Search, Menu, Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   onMenuClick?: () => void;
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <header className='bg-white border-b border-gray-200 px-6 py-4 lg:px-8'>
       <div className='flex items-center justify-between'>
@@ -49,6 +52,20 @@ export function Header({ onMenuClick }: HeaderProps) {
             <div className='w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-md'>
               <span className='text-sm font-semibold text-white'>JD</span>
             </div>
+          </div>
+          <div className='flex items-center gap-2'>
+            <button
+              onClick={() => navigate('/login')}
+              className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200'
+            >
+              Login
+            </button>
+            <button
+              onClick={() => navigate('/signup')}
+              className='px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600'
+            >
+              Signup
+            </button>
           </div>
         </div>
       </div>

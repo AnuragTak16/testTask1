@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import axios from 'axios';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 
 interface Employee {
-  serNo: number;
   company: string;
   email: string;
   phone: string;
@@ -33,7 +33,7 @@ export function AddEmployeeModal({
   onClose,
   onSubmit,
 }: AddEmployeeDialogProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Employee>({
     company: '',
     email: '',
     phone: '',
@@ -42,14 +42,8 @@ export function AddEmployeeModal({
     status: 'Active',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      serNo: 1,
-      ...formData,
-    });
-    onClose();
-  };
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -58,10 +52,48 @@ export function AddEmployeeModal({
       e.target.type === 'number'
         ? Number.parseInt(e.target.value) || 0
         : e.target.value;
+
     setFormData({
       ...formData,
       [e.target.name]: value,
     });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        'http://localhost:3000/api/addemployee',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      onSubmit(response.data.employee);
+      onClose();
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(
+          err.response?.data?.error ||
+            err.response?.data?.message ||
+            err.message ||
+            'Something went wrong'
+        );
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Something went wrong');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,6 +106,8 @@ export function AddEmployeeModal({
         <DialogDescription className='mb-4'>
           Fill out the details below to add a new employee.
         </DialogDescription>
+
+        {error && <p className='text-red-500 mb-4'>{error}</p>}
 
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div>
@@ -179,8 +213,9 @@ export function AddEmployeeModal({
             <Button
               type='submit'
               className='flex-1 bg-red-500 hover:bg-red-600 text-white'
+              disabled={loading}
             >
-              Add Employee
+              {loading ? 'Adding...' : 'Add Employee'}
             </Button>
           </DialogFooter>
         </form>

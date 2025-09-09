@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import axios from 'axios';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -25,26 +26,20 @@ export default function SignupPage() {
     setMessage(null);
 
     try {
-      const res = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
+      await axios.post('http://localhost:3000/api/signup', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessage(data.error || 'Something went wrong');
+      setMessage(' Signup successful! You can now log in.');
+      setFormData({ name: '', email: '', password: '' });
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        setMessage(error.response.data.error || 'Something went wrong');
       } else {
-        setMessage('✅ Signup successful! You can now log in.');
-        setFormData({ name: '', email: '', password: '' });
+        setMessage('Server error, please try again');
       }
-    } catch {
-      setMessage(' Server error, please try again');
     } finally {
       setLoading(false);
     }
