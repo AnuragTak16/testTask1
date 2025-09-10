@@ -1,7 +1,6 @@
-'use client';
-
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
+import axios from 'axios';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 interface Lead {
-  id: number;
+  _id: string;
   serNo: number;
   company: string;
   email: string;
@@ -28,7 +27,7 @@ interface EditLeadDialogProps {
   open: boolean;
   onClose: () => void;
   lead: Lead;
-  onSubmit: (lead: Omit<Lead, 'id'>) => void;
+  onSubmit: (updatedLead: Lead) => void;
 }
 
 export function EditLeadModal({
@@ -41,32 +40,65 @@ export function EditLeadModal({
     company: lead.company,
     email: lead.email,
     phone: lead.phone,
-    tag: lead.tags[0] || '',
+    tag: lead.tags.join(', '),
     status: lead.status,
     employee: lead.employee,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      serNo: lead.serNo,
-      company: formData.company,
-      email: formData.email,
-      phone: formData.phone,
-      tags: formData.tag ? [formData.tag] : [],
-      status: formData.status,
-      employee: formData.employee,
-    });
-    onClose();
-  };
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedFile(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const data = new FormData();
+      data.append('company', formData.company);
+      data.append('email', formData.email);
+      data.append('phone', formData.phone);
+      data.append('status', formData.status);
+      data.append('employee', formData.employee);
+      data.append(
+        'tags',
+        JSON.stringify(formData.tag.split(',').map((t) => t.trim()))
+      );
+
+      if (selectedFile) {
+        data.append('image', selectedFile);
+      }
+
+      const response = await axios.put(
+        `http://localhost:3000/api/updatelead/${lead._id}`,
+        data,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      console.log('Lead successfully updated:', response.data);
+
+      // call onSubmit to update frontend state
+      onSubmit(response.data.lead);
+      onClose();
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          'Error updating lead:',
+          error.response?.data || error.message
+        );
+      } else if (error instanceof Error) {
+        console.error('Error updating lead:', error.message);
+      } else {
+        console.error('Error updating lead:', error);
+      }
+    }
   };
 
   return (
@@ -80,6 +112,7 @@ export function EditLeadModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
+          {/* Company */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
               Company
@@ -94,6 +127,7 @@ export function EditLeadModal({
             />
           </div>
 
+          {/* Email + Phone */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -123,27 +157,42 @@ export function EditLeadModal({
             </div>
           </div>
 
+          {/* File Upload */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
               Upload Image
             </label>
             <div className='border-2 border-dashed border-gray-300 rounded-lg p-4 text-center'>
               <Upload className='w-8 h-8 text-gray-400 mx-auto mb-2' />
+              <input
+                type='file'
+                accept='image/*'
+                className='hidden'
+                onChange={handleFileChange}
+                id='edit-upload-image'
+              />
               <Button
                 type='button'
                 variant='outline'
                 size='sm'
                 className='mt-1'
+                onClick={() =>
+                  document.getElementById('edit-upload-image')?.click()
+                }
               >
                 Choose from gallery
               </Button>
+              {selectedFile && (
+                <p className='text-sm mt-2'>{selectedFile.name}</p>
+              )}
             </div>
           </div>
 
+          {/* Tags + Status */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
-                Tag
+                Tags (comma separated)
               </label>
               <input
                 type='text'
@@ -165,13 +214,15 @@ export function EditLeadModal({
                 required
               >
                 <option value=''>Select status</option>
-                <option value='Contacted'>Contacted</option>
-                <option value='Qualified'>Qualified</option>
-                <option value='Pending'>Pending</option>
+                <option value='new'>New</option>
+                <option value='contacted'>Contacted</option>
+                <option value='qualified'>Qualified</option>
+                <option value='lost'>Lost</option>
               </select>
             </div>
           </div>
 
+          {/* Employee */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
               Employee

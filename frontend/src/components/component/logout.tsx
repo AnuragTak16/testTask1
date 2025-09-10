@@ -24,7 +24,19 @@ export function LogoutModal({ open, onClose }: LogoutAlertDialogProps) {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await axios.post('/api/logout');
+      await axios.post(
+        'http://localhost:3000/api/logout',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
 
       window.location.href = '/login';
     } catch (error) {
@@ -49,13 +61,13 @@ export function LogoutModal({ open, onClose }: LogoutAlertDialogProps) {
         <AlertDialogFooter>
           <AlertDialogCancel
             onClick={onClose}
-            className='bg-black text-white hover:bg-gray-800'
+            className='bg-gray-700 text-white hover:bg-gray-800 px-4 py-2 rounded'
           >
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleLogout}
-            className='bg-red-500 text-white hover:bg-red-600'
+            className='bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded'
             disabled={loading}
           >
             {loading ? 'Logging Out...' : 'Log Out'}

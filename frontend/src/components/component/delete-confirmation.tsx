@@ -1,5 +1,3 @@
-'use client';
-
 import { AlertTriangle } from 'lucide-react';
 import {
   AlertDialog,
@@ -8,6 +6,8 @@ import {
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
 interface DeleteConfirmModalProps {
@@ -21,22 +21,27 @@ interface DeleteConfirmModalProps {
 export function DeleteConfirmModal({
   open,
   itemName,
+  itemType,
   onClose,
   onConfirm,
 }: DeleteConfirmModalProps) {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
       <AlertDialogContent className='max-w-md bg-white'>
-        <div className='text-center my-4'>
+        <AlertDialogHeader className='text-center'>
+          <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
           <div className='w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
             <AlertTriangle className='w-6 h-6 text-red-600' />
           </div>
           <AlertDialogDescription>
-            Do you really want to delete the
+            Do you really want to delete the{' '}
+            {itemType && (
+              <span className='font-semibold text-gray-900'>{itemType}</span>
+            )}{' '}
             <span className='font-semibold text-gray-900'>"{itemName}"</span>?
             This action cannot be undone.
           </AlertDialogDescription>
-        </div>
+        </AlertDialogHeader>
 
         <AlertDialogFooter className='flex gap-3'>
           <AlertDialogCancel

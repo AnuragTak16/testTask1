@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function SignupPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,14 +28,12 @@ export default function SignupPage() {
     setMessage(null);
 
     try {
-      await axios.post('http://localhost:3000/api/signup', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-      });
+      await axios.post('http://localhost:3000/api/signup', formData);
 
-      setMessage(' Signup successful! You can now log in.');
+      setMessage('Signup successful! Redirecting to login...');
       setFormData({ name: '', email: '', password: '' });
+
+      setTimeout(() => navigate('/login'), 2000);
     } catch (error: any) {
       if (error.response && error.response.data) {
         setMessage(error.response.data.error || 'Something went wrong');
@@ -46,15 +46,15 @@ export default function SignupPage() {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-100'>
-      <Card className='w-full max-w-md shadow-lg'>
-        <CardHeader>
-          <CardTitle className='text-center text-2xl font-bold text-gray-900'>
+    <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+      <Card className='w-full max-w-md shadow-xl rounded-2xl'>
+        <CardHeader className='bg-red-500 rounded-t-2xl'>
+          <CardTitle className='text-center text-3xl font-bold text-white py-6'>
             Sign Up
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className='space-y-4'>
+        <CardContent className='p-8'>
+          <form onSubmit={handleSubmit} className='space-y-6'>
             <div>
               <Label htmlFor='name'>Full Name</Label>
               <Input
@@ -65,6 +65,7 @@ export default function SignupPage() {
                 value={formData.name}
                 onChange={handleChange}
                 required
+                className='mt-1 focus:ring-red-500 focus:border-red-500'
               />
             </div>
 
@@ -78,6 +79,7 @@ export default function SignupPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                className='mt-1 focus:ring-red-500 focus:border-red-500'
               />
             </div>
 
@@ -91,19 +93,36 @@ export default function SignupPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                className='mt-1 focus:ring-red-500 focus:border-red-500'
               />
             </div>
 
             {message && (
-              <p className='text-sm text-center text-red-500'>{message}</p>
+              <p
+                className={`text-center text-sm ${
+                  message.includes('successful')
+                    ? 'text-green-500'
+                    : 'text-red-500'
+                }`}
+              >
+                {message}
+              </p>
             )}
 
             <Button
               type='submit'
-              className='w-full bg-red-500 hover:bg-red-600 text-white'
+              className='w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition'
               disabled={loading}
             >
               {loading ? 'Signing up...' : 'Sign Up'}
+            </Button>
+
+            <Button
+              type='button'
+              className='w-full border border-red-500 text-red-500 hover:bg-red-50 font-semibold py-3 rounded-lg transition'
+              onClick={() => navigate('/')}
+            >
+              Already have an account? Login
             </Button>
           </form>
         </CardContent>

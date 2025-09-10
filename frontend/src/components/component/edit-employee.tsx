@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import {
   Dialog,
@@ -11,9 +9,10 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import axios from 'axios';
 
 interface Employee {
-  id: number;
+  _id: string;
   serNo: number;
   company: string;
   email: string;
@@ -27,7 +26,7 @@ interface EditEmployeeModalProps {
   open: boolean;
   employee: Employee;
   onClose: () => void;
-  onSubmit: (employee: Omit<Employee, 'id'>) => void;
+  onSubmit: (employee: Employee) => void;
 }
 
 export function EditEmployeeModal({
@@ -45,13 +44,40 @@ export function EditEmployeeModal({
     status: employee.status,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      serNo: employee.serNo,
-      ...formData,
-    });
-    onClose();
+    setLoading(true);
+    setError('');
+
+    try {
+      const { data } = await axios.put(
+        `http://localhost:3000/api/updateemployee/${employee._id}`,
+        {
+          serNo: employee.serNo,
+          ...formData,
+        }
+      );
+
+      onSubmit(data.employee);
+      onClose();
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          'Error updating employee:',
+          error.response?.data || error.message
+        );
+      } else if (error instanceof Error) {
+        console.error(
+          'An unexpected error occurred while updating the employee:',
+          error.message
+        );
+      } else {
+        console.error('Error adding employee:', error);
+      }
+    }
   };
 
   const handleChange = (
@@ -77,6 +103,8 @@ export function EditEmployeeModal({
         <DialogDescription className='mb-4'>
           Update the employee details below.
         </DialogDescription>
+
+        {error && <p className='text-red-500 text-sm mb-2'>{error}</p>}
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div>
@@ -170,15 +198,21 @@ export function EditEmployeeModal({
 
           <DialogFooter className='flex gap-4 pt-2'>
             <DialogClose asChild>
-              <Button type='button' variant='outline' className='flex-1'>
+              <Button
+                type='button'
+                variant='outline'
+                className='flex-1'
+                disabled={loading}
+              >
                 Cancel
               </Button>
             </DialogClose>
             <Button
               type='submit'
               className='flex-1 bg-red-500 hover:bg-red-600 text-white'
+              disabled={loading}
             >
-              Update Employee
+              {loading ? 'Updating...' : 'Update Employee'}
             </Button>
           </DialogFooter>
         </form>

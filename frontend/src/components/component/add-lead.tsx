@@ -1,7 +1,6 @@
-'use client';
-
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
+import axios from 'axios';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,7 @@ interface Lead {
 interface AddLeadModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit?: (lead: Lead) => void; // optional submit callback
+  onSubmit?: (lead: Lead) => void;
 }
 
 export function AddLeadModal({ open, onClose, onSubmit }: AddLeadModalProps) {
@@ -39,7 +38,20 @@ export function AddLeadModal({ open, onClose, onSubmit }: AddLeadModalProps) {
     employee: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedFile(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newLead: Lead = {
@@ -47,27 +59,46 @@ export function AddLeadModal({ open, onClose, onSubmit }: AddLeadModalProps) {
       company: formData.company,
       email: formData.email,
       phone: formData.phone,
-      tags: formData.tag ? [formData.tag] : [],
+      tags: formData.tag ? formData.tag.split(',').map((t) => t.trim()) : [],
       status: formData.status,
       employee: formData.employee,
     };
 
-    if (onSubmit) {
-      onSubmit(newLead);
-    } else {
-      console.log('Lead submitted:', newLead);
+    try {
+      const data = new FormData();
+      data.append('company', newLead.company);
+      data.append('email', newLead.email);
+      data.append('phone', newLead.phone);
+      data.append('status', newLead.status);
+      data.append('employee', newLead.employee);
+      data.append('tags', JSON.stringify(newLead.tags));
+
+      if (selectedFile) {
+        data.append('image', selectedFile);
+      }
+
+      const response = await axios.post(
+        'http://localhost:3000/api/addlead',
+        data,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      console.log('Lead successfully added:', response.data);
+
+      if (onSubmit) onSubmit(newLead);
+      onClose();
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          'Error adding lead:',
+          error.response?.data || error.message
+        );
+      } else if (error instanceof Error) {
+        console.error('Error adding lead:', error.message);
+      } else {
+        console.error('Error adding lead:', error);
+      }
     }
-
-    onClose(); // close after submit
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
   };
 
   return (
@@ -90,7 +121,7 @@ export function AddLeadModal({ open, onClose, onSubmit }: AddLeadModalProps) {
               name='company'
               value={formData.company}
               onChange={handleChange}
-              placeholder='Loren'
+              placeholder='Company Name'
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent'
               required
             />
@@ -133,23 +164,13 @@ export function AddLeadModal({ open, onClose, onSubmit }: AddLeadModalProps) {
             </label>
             <div className='border-2 border-dashed border-gray-300 rounded-lg p-4 text-center'>
               <Upload className='w-8 h-8 text-gray-400 mx-auto mb-2' />
-
-              {/* Hidden file input */}
               <input
                 type='file'
                 accept='image/*'
                 id='upload-image'
                 className='hidden'
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    console.log('Selected file:', file);
-                    // TODO: handle file upload (preview, send to API, etc.)
-                  }
-                }}
+                onChange={handleFileChange}
               />
-
-              {/* Button triggers hidden input */}
               <Button
                 type='button'
                 variant='outline'
@@ -159,20 +180,23 @@ export function AddLeadModal({ open, onClose, onSubmit }: AddLeadModalProps) {
               >
                 Choose from gallery
               </Button>
+              {selectedFile && (
+                <p className='text-sm mt-2'>{selectedFile.name}</p>
+              )}
             </div>
           </div>
 
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
-                Tag
+                Tags (comma separated)
               </label>
               <input
                 type='text'
                 name='tag'
                 value={formData.tag}
                 onChange={handleChange}
-                placeholder='Important'
+                placeholder='Important, Urgent'
                 className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent'
               />
             </div>
@@ -187,9 +211,11 @@ export function AddLeadModal({ open, onClose, onSubmit }: AddLeadModalProps) {
                 className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent'
                 required
               >
-                <option value='Contacted'>Contacted</option>
-                <option value='Qualified'>Qualified</option>
-                <option value='Pending'>Pending</option>
+                <option value=''>Select Status</option>
+                <option value='new'>New</option>
+                <option value='contacted'>Contacted</option>
+                <option value='qualified'>Qualified</option>
+                <option value='lost'>Lost</option>
               </select>
             </div>
           </div>
