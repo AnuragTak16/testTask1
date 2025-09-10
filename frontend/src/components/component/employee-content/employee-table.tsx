@@ -3,11 +3,10 @@ import axios from 'axios';
 import { Edit, Trash2, Plus } from 'lucide-react';
 import { AddEmployeeModal } from './add-employee';
 import { EditEmployeeModal } from './edit-employee';
-import { DeleteConfirmModal } from './delete-confirmation';
+import { DeleteConfirmModal } from '../delete-confirmation';
 
 interface Employee {
   _id: string;
-  serNo: number;
   company: string;
   email: string;
   phone: string;
@@ -32,7 +31,6 @@ export function EmployeeContent() {
     const fetchEmployees = async () => {
       setLoading(true);
       setError(null);
-
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
@@ -44,15 +42,11 @@ export function EmployeeContent() {
         setEmployees(response.data);
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-          alert(
-            `Failed to fetch employees: ${
-              error.response?.data?.message || error.message
-            }`
-          );
+          setError(error.response?.data?.message || error.message);
         } else if (error instanceof Error) {
-          alert(`Failed to fetch employees: ${error.message}`);
+          setError(error.message);
         } else {
-          alert('An unknown error occurred while fetching employees.');
+          setError('An unknown error occurred while fetching employees.');
         }
       } finally {
         setLoading(false);
@@ -62,11 +56,10 @@ export function EmployeeContent() {
     fetchEmployees();
   }, []);
 
-  const handleAddEmployee = (employeeData: Omit<Employee, '_id' | 'serNo'>) => {
+  const handleAddEmployee = (employeeData: Omit<Employee, '_id'>) => {
     const newEmployee = {
       ...employeeData,
       _id: crypto.randomUUID(),
-      serNo: employees.length + 1,
     };
     setEmployees([...employees, newEmployee]);
     setShowAddModal(false);
@@ -96,26 +89,14 @@ export function EmployeeContent() {
         );
 
         setEmployees((prev) =>
-          prev
-            .filter((emp) => emp._id !== selectedEmployee._id)
-            .map((emp, index) => ({ ...emp, serNo: index + 1 }))
+          prev.filter((emp) => emp._id !== selectedEmployee._id)
         );
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-          console.error(
-            'Error deleting employee:',
-            error.response?.data || error.message
-          );
-          alert(
-            `Error deleting employee: ${
-              error.response?.data?.error || error.message
-            }`
-          );
+          alert(error.response?.data?.error || error.message);
         } else if (error instanceof Error) {
-          console.error('Failed to delete employee:', error.message);
-          alert(`Failed to delete employee: ${error.message}`);
+          alert(error.message);
         } else {
-          console.error('Error deleting employee:', error);
           alert('An unknown error occurred while deleting employee.');
         }
       } finally {
@@ -188,11 +169,11 @@ export function EmployeeContent() {
             </tr>
           </thead>
           <tbody className='bg-white divide-y divide-gray-100'>
-            {employees.map((employee) => (
+            {employees.map((employee, index) => (
               <tr
                 key={employee._id}
                 className={`${
-                  employee.serNo % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                 } hover:bg-red-50 transition-colors duration-200`}
               >
                 <td className='px-6 py-4'>
@@ -202,7 +183,7 @@ export function EmployeeContent() {
                   />
                 </td>
                 <td className='px-6 py-4 text-sm font-medium text-gray-900'>
-                  {employee.serNo}
+                  {index + 1} {/* Dynamic serial number */}
                 </td>
                 <td className='px-6 py-4'>
                   <span className='text-sm font-semibold text-red-600'>
@@ -267,7 +248,12 @@ export function EmployeeContent() {
       {showEditModal && selectedEmployee && (
         <EditEmployeeModal
           open={showEditModal}
-          employee={selectedEmployee}
+          employee={{
+            ...selectedEmployee,
+            serNo:
+              employees.findIndex((emp) => emp._id === selectedEmployee._id) +
+              1,
+          }}
           onClose={() => {
             setShowEditModal(false);
             setSelectedEmployee(null);

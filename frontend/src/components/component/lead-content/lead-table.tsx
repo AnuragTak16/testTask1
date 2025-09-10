@@ -5,7 +5,7 @@ import axios from 'axios';
 import { Edit, Trash2 } from 'lucide-react';
 import { AddLeadModal } from './add-lead';
 import { EditLeadModal } from './edit-lead';
-import { DeleteConfirmModal } from './delete-confirmation';
+import { DeleteConfirmModal } from '../delete-confirmation';
 
 interface Lead {
   _id: string;
@@ -134,6 +134,12 @@ export function LeadsContent() {
         <table className='w-full'>
           <thead className='bg-gray-50 border-b border-gray-200'>
             <tr>
+              <th className='px-6 py-3 text-left'>
+                <input
+                  type='checkbox'
+                  className='rounded border-gray-300 text-red-500 focus:ring-red-500'
+                />
+              </th>
               <th className='px-6 py-4 text-left'>Ser No</th>
               <th className='px-6 py-4 text-left'>Company</th>
               <th className='px-6 py-4 text-left'>Email</th>
@@ -148,6 +154,12 @@ export function LeadsContent() {
           <tbody className='divide-y divide-gray-100'>
             {leads.map((lead, index) => (
               <tr key={lead._id} className='hover:bg-gray-50'>
+                <td className='px-6 py-4'>
+                  <input
+                    type='checkbox'
+                    className='rounded border-gray-300 text-red-500 focus:ring-red-500'
+                  />
+                </td>
                 <td className='px-6 py-4'>{index + 1}</td>
                 <td className='px-6 py-4 text-red-600 font-semibold'>
                   {lead.company}
@@ -186,7 +198,6 @@ export function LeadsContent() {
         </table>
       </div>
 
-      {/* ✅ Modals */}
       {showAddModal && (
         <AddLeadModal
           open={showAddModal}

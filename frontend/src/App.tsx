@@ -1,12 +1,12 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { EmployeeContent } from './components/component/employee-table';
+import { EmployeeContent } from './components/component/employee-content/employee-table';
 import { Sidebar } from './components/component/sidebar';
 import { Header } from './components/component/header';
 import { LogoutModal } from './components/component/logout';
 import Login from './components/component/login';
 import { useState } from 'react';
 import { Dashboard } from './components/component/dashboard';
-import { LeadsContent } from './components/component/lead-table';
+import { LeadsContent } from './components/component/lead-content/lead-table';
 import Signup from './components/component/signup';
 
 export function App() {
