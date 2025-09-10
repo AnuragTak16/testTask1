@@ -12,7 +12,12 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [storedData, setStoredData] = useState<any>(null);
+  interface StoredData {
+    accessToken: string;
+    refreshToken: string;
+    user: unknown;
+  }
+  const [_storedData, setStoredData] = useState<StoredData | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,6 +42,7 @@ export default function LoginPage() {
       localStorage.setItem('accessToken', response.data.AccessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      console.log(_storedData);
 
       setStoredData({
         accessToken: response.data.AccessToken,

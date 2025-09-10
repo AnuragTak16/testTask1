@@ -56,26 +56,22 @@ export function EmployeeContent() {
         }
       } finally {
         setLoading(false);
-        setEmployees([]);
       }
     };
 
     fetchEmployees();
   }, []);
 
-  // Add new employee
   const handleAddEmployee = (employeeData: Omit<Employee, '_id' | 'serNo'>) => {
     const newEmployee = {
       ...employeeData,
       _id: crypto.randomUUID(),
       serNo: employees.length + 1,
     };
-
     setEmployees([...employees, newEmployee]);
     setShowAddModal(false);
   };
 
-  // Edit employee
   const handleEditEmployee = (employeeData: Omit<Employee, '_id'>) => {
     if (selectedEmployee) {
       setEmployees(
@@ -90,7 +86,6 @@ export function EmployeeContent() {
     }
   };
 
-  // Delete employee with API call
   const handleDeleteEmployee = async () => {
     if (selectedEmployee) {
       try {
@@ -101,16 +96,18 @@ export function EmployeeContent() {
         );
 
         setEmployees((prev) =>
-          prev.filter((emp) => emp._id !== selectedEmployee._id)
+          prev
+            .filter((emp) => emp._id !== selectedEmployee._id)
+            .map((emp, index) => ({ ...emp, serNo: index + 1 }))
         );
       } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
           console.error(
-            'Error updating lead:',
+            'Error deleting employee:',
             error.response?.data || error.message
           );
           alert(
-            `Error updating lead: ${
+            `Error deleting employee: ${
               error.response?.data?.error || error.message
             }`
           );
@@ -118,8 +115,8 @@ export function EmployeeContent() {
           console.error('Failed to delete employee:', error.message);
           alert(`Failed to delete employee: ${error.message}`);
         } else {
-          console.error('Error updating lead:', error);
-          alert('An unknown error occurred while updating lead.');
+          console.error('Error deleting employee:', error);
+          alert('An unknown error occurred while deleting employee.');
         }
       } finally {
         setShowDeleteModal(false);
@@ -138,13 +135,8 @@ export function EmployeeContent() {
     setShowDeleteModal(true);
   };
 
-  if (loading) {
-    return <p className='p-6 text-gray-500'>Loading employees...</p>;
-  }
-
-  if (error) {
-    return <p className='p-6 text-red-500'>{error}</p>;
-  }
+  if (loading) return <p className='p-6 text-gray-500'>Loading employees...</p>;
+  if (error) return <p className='p-6 text-red-500'>{error}</p>;
 
   return (
     <div className='h-full flex flex-col bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden'>
@@ -159,7 +151,6 @@ export function EmployeeContent() {
         </button>
       </div>
 
-      {/* Table */}
       <div className='flex-1 p-6 overflow-x-auto'>
         <table className='min-w-full divide-y divide-gray-200'>
           <thead className='bg-gray-50'>
@@ -197,11 +188,11 @@ export function EmployeeContent() {
             </tr>
           </thead>
           <tbody className='bg-white divide-y divide-gray-100'>
-            {employees.map((employee, index) => (
+            {employees.map((employee) => (
               <tr
                 key={employee._id}
                 className={`${
-                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                  employee.serNo % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                 } hover:bg-red-50 transition-colors duration-200`}
               >
                 <td className='px-6 py-4'>
@@ -211,7 +202,7 @@ export function EmployeeContent() {
                   />
                 </td>
                 <td className='px-6 py-4 text-sm font-medium text-gray-900'>
-                  {index + 1}
+                  {employee.serNo}
                 </td>
                 <td className='px-6 py-4'>
                   <span className='text-sm font-semibold text-red-600'>
@@ -265,7 +256,6 @@ export function EmployeeContent() {
         </table>
       </div>
 
-      {/* Modals */}
       {showAddModal && (
         <AddEmployeeModal
           open={showAddModal}

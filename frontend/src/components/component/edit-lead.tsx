@@ -21,6 +21,7 @@ interface Lead {
   tags: string[];
   status: string;
   employee: string;
+  image?: string;
 }
 
 interface EditLeadDialogProps {
@@ -46,6 +47,9 @@ export function EditLeadModal({
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [currentImage, setCurrentImage] = useState<string | null>(
+    lead.image || null
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -56,6 +60,7 @@ export function EditLeadModal({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setSelectedFile(file);
+    if (file) setCurrentImage(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +89,6 @@ export function EditLeadModal({
       );
       console.log('Lead successfully updated:', response.data);
 
-      // call onSubmit to update frontend state
       onSubmit(response.data.lead);
       onClose();
     } catch (error: unknown) {
@@ -112,7 +116,6 @@ export function EditLeadModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
-          {/* Company */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
               Company
@@ -127,7 +130,6 @@ export function EditLeadModal({
             />
           </div>
 
-          {/* Email + Phone */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -157,13 +159,13 @@ export function EditLeadModal({
             </div>
           </div>
 
-          {/* File Upload */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
               Upload Image
             </label>
             <div className='border-2 border-dashed border-gray-300 rounded-lg p-4 text-center'>
               <Upload className='w-8 h-8 text-gray-400 mx-auto mb-2' />
+
               <input
                 type='file'
                 accept='image/*'
@@ -171,6 +173,7 @@ export function EditLeadModal({
                 onChange={handleFileChange}
                 id='edit-upload-image'
               />
+
               <Button
                 type='button'
                 variant='outline'
@@ -182,13 +185,21 @@ export function EditLeadModal({
               >
                 Choose from gallery
               </Button>
+
+              {currentImage && (
+                <img
+                  src={currentImage}
+                  alt='Lead Image'
+                  className='mx-auto mt-2 w-24 h-24 object-cover rounded-full'
+                />
+              )}
+
               {selectedFile && (
                 <p className='text-sm mt-2'>{selectedFile.name}</p>
               )}
             </div>
           </div>
 
-          {/* Tags + Status */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -222,7 +233,6 @@ export function EditLeadModal({
             </div>
           </div>
 
-          {/* Employee */}
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
               Employee

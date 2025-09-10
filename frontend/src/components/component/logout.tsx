@@ -12,6 +12,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { useNavigate } from 'react-router-dom';
 
 interface LogoutAlertDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface LogoutAlertDialogProps {
 
 export function LogoutModal({ open, onClose }: LogoutAlertDialogProps) {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     setLoading(true);
@@ -38,7 +40,7 @@ export function LogoutModal({ open, onClose }: LogoutAlertDialogProps) {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
 
-      window.location.href = '/login';
+      navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
       alert('Failed to log out. Please try again.');
