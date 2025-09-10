@@ -19,6 +19,7 @@ app.use(
 DatabaseConnection();
 
 app.use(express.json());
+app.use(cors());
 
 // Routes
 app.use('/api', userRoutes);

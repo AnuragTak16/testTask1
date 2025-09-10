@@ -66,6 +66,7 @@ export const updateEmployee = async (req, res) => {
 };
 
 // DELETE Employee
+
 export const deleteEmployee = async (req, res) => {
   try {
     const deletedEmployee = await Employee.findByIdAndDelete(req.params.id);
@@ -76,5 +77,15 @@ export const deleteEmployee = async (req, res) => {
   } catch (error) {
     console.error('Delete Employee Error:', error.message);
     res.status(500).json({ error: 'Server error while deleting employee' });
+  }
+};
+
+//count of employees
+export const countEmployees = async (req, res) => {
+  try {
+    const count = await Employee.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch employees count' });
   }
 };

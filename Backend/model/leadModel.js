@@ -14,22 +14,27 @@ const leadSchema = new Schema(
     },
     phone: {
       type: String,
+      required: true,
     },
     image: {
       type: String,
     },
-    tag: {
-      type: String,
+    tags: {
+      type: [String], // Array of strings
+      default: [],
     },
     status: {
       type: String,
-      enum: ['new', 'contacted', 'qualified', 'lost'],
+      enum: ['new', 'Contacted', 'Qualified', 'Pending'], // restrict values
       default: 'new',
     },
-    employee: { type: String },
+    employee: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
 const Lead = mongoose.model('Lead', leadSchema);
-module.exports = Lead;
+export default Lead;

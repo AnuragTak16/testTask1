@@ -1,11 +1,21 @@
-import Lead from '../model/leadModel';
+import Lead from '../model/leadModel.js';
 
 // CREATE Lead
-const createLead = async (req, res) => {
+export const createLead = async (req, res) => {
   try {
-    const { company, email, phone, tag, status, employee } = req.body;
-    const image = req.file ? req.file.filename : null;
+    console.log('req.body:', req.body);
+    console.log('req.file:', req.file);
 
+    const { company, email, phone, tags, status, employee } = req.body;
+
+    // Parse tags if sent as JSON string from frontend
+    const parsedTags = tags ? JSON.parse(tags) : [];
+
+    if (!company || !email || !phone || !employee) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Check if lead already exists
     const existingLead = await Lead.findOne({ email });
     if (existingLead) {
       return res.status(400).json({ error: 'Email already exists for a lead' });
@@ -15,23 +25,25 @@ const createLead = async (req, res) => {
       company,
       email,
       phone,
-      image,
-      tag,
+      image: req.file ? req.file.filename : null, // multer handles file
+      tags: parsedTags,
       status,
       employee,
     });
+
     await newLead.save();
+
     res
       .status(201)
       .json({ message: 'Lead created successfully', lead: newLead });
   } catch (error) {
-    console.error('Create Lead Error:', error.message);
+    console.error('Create Lead Error:', error);
     res.status(500).json({ error: 'Server error while creating lead' });
   }
 };
 
 // GET ALL Leads
-const getLeads = async (req, res) => {
+export const getLeads = async (req, res) => {
   try {
     const leads = await Lead.find();
     res.status(200).json(leads);
@@ -42,9 +54,15 @@ const getLeads = async (req, res) => {
 };
 
 // UPDATE Lead
-const updateLead = async (req, res) => {
+export const updateLead = async (req, res) => {
   try {
     const updateData = { ...req.body };
+
+    // Parse tags if included
+    if (updateData.tags && typeof updateData.tags === 'string') {
+      updateData.tags = JSON.parse(updateData.tags);
+    }
+
     if (req.file) updateData.image = req.file.filename;
 
     const updatedLead = await Lead.findByIdAndUpdate(
@@ -52,7 +70,9 @@ const updateLead = async (req, res) => {
       updateData,
       { new: true, runValidators: true }
     );
+
     if (!updatedLead) return res.status(404).json({ error: 'Lead not found' });
+
     res
       .status(200)
       .json({ message: 'Lead updated successfully', lead: updatedLead });
@@ -63,10 +83,11 @@ const updateLead = async (req, res) => {
 };
 
 // DELETE Lead
-const deleteLead = async (req, res) => {
+export const deleteLead = async (req, res) => {
   try {
     const deletedLead = await Lead.findByIdAndDelete(req.params.id);
     if (!deletedLead) return res.status(404).json({ error: 'Lead not found' });
+
     res.status(200).json({ message: 'Lead deleted successfully' });
   } catch (error) {
     console.error('Delete Lead Error:', error.message);
@@ -74,4 +95,12 @@ const deleteLead = async (req, res) => {
   }
 };
 
-exports = { createLead, getLeads, updateLead, deleteLead };
+//count of leads
+export const countLeads = async (req, res) => {
+  try {
+    const count = await Lead.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch leads count' });
+  }
+};
